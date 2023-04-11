@@ -19,7 +19,7 @@ This can also be enabled programmatically with `warnings.simplefilter('default',
 ## [2.7.4] - Not released yet
 
 ### Added
-- documentation on how to embed `graphs` and `charts` generated using `Pygal` lib: [documentation section](https://pyfpdf.github.io/fpdf2/Maths.html#using-pygal)
+- documentation on how to embed `graphs` and `charts` generated using `Pygal` lib: [documentation section](https://pyfpdf.github.io/fpdf2/Maths.html#using-pygal) - thanks to @ssavi-ict
 
 ## [2.7.3] - 2023-04-03
 ### Fixed

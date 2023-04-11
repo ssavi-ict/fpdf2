@@ -227,9 +227,9 @@ Result:
 
 
 ## Using Pygal ##
-[Pygal](https://www.pygal.org/en/stable/) is a graph plotting library using python. You can install Pygal using ` $ pip install pygal` command. 
+[Pygal](https://www.pygal.org/en/stable/) is a graph plotting library using Python. You can install Pygal using `pip install pygal` command.  
 
-`fpdf2` is able to embed the graph and charts that are generated using `Pygal` library. The following ways explain how to embed `Pygal` charts into `fpdf2` library.
+`fpdf2` is able to embed the graph and charts that are generated using `Pygal` library. The following ways explain how to embed `Pygal` charts into `fpdf2` library. However, we can not embed graphs as SVG directly. Since, `Pygal` introduces <style> & <script> elements to the `SVG` images it produces ([Ref](https://github.com/Kozea/pygal/blob/3.0.0/pygal/svg.py#L449)) which currently not supported by `fpdf`. You can see the unsupported SVG features of `fpdf`[here](https://pyfpdf.github.io/fpdf2/SVG.html#currently-unsupported-notable-svg-features).
 
 ### Using cairosvg (*A faster and efficient implementation*) ### 
 
@@ -252,7 +252,7 @@ bar_chart.add('IE',      [85.8, 84.6, 84.7, 74.5,   66, 58.6, 54.7, 44.8, 36.2, 
 bar_chart.add('Others',  [14.2, 15.4, 15.3,  8.9,    9, 10.4,  8.9,  5.8,  6.7,  6.8,  7.5])
 
 # Use CairoSVG to convert PNG from SVG of barchart
-svg_img_byte = BytesIO()
+svg_img_bytesio = BytesIO()
 cairosvg.svg2png(bar_chart.render(), write_to=svg_img_byte)
 
 # Set the position and size of the image in the PDF
@@ -268,7 +268,7 @@ pdf.image(svg_img_byte, x=x, y=y, w=w, h=h)
 pdf.output('bar_chart.pdf')
 ```
 The above code generates a pdf with title `bar_chart.pdf` file with following graph -
-![](pygal_chart_cairo.png)
+![](pygal_chart_cairo.PNG)
 
 **!! Troubleshoot: !!**
 
@@ -285,10 +285,12 @@ In this case install install `GTK` from [GTK-for-Windows-Runtime-Environment-Ins
 
 ### Using svglib and reportlab (*A slower and purely pythonic implementation*) ### 
 ```python
+import io
 import pygal
 from reportlab.graphics import renderPM
-from svglib.svglib import svg2rlg
+from svglib.svglib import SvgRenderer
 from fpdf import FPDF
+from lxml import etree
 
 # Create a Pygal bar chart
 bar_chart = pygal.Bar()
@@ -297,10 +299,13 @@ bar_chart.x_labels = ['2016', '2017', '2018', '2019', '2020']
 bar_chart.add('Product A', [500, 750, 1000, 1250, 1500])
 bar_chart.add('Product B', [750, 1000, 1250, 1500, 1750])
 
-# Render the chart to an SVG and PNG file
-bar_chart.render_to_file('bar_chart.svg')
-drawing = svg2rlg("bar_chart.svg")
-renderPM.drawToFile(drawing, "bar_chart.png")
+# Render the chart and convert it to a bytestring object
+svg_img = bar_chart.render()
+xml_parser = etree.XMLParser()
+svg_root = etree.fromstring(svg_img, parser=xml_parser)
+drawing = SvgRenderer(svg_img).render(svg_root)
+drawing_img_byte = renderPM.drawToString(drawing)
+img_bytes = io.BytesIO(drawing_img_byte)
 
 # Set the position and size of the image in the PDF
 x = 50
@@ -308,17 +313,13 @@ y = 50
 w = 100
 h = 70
 
+# Make the PDF
 pdf = FPDF()
 pdf.add_page()
-pdf.image('bar_chart.png', x=x, y=y, w=w, h=h)
-pdf.output('bar_chart.pdf')
-
-# os.remove('bar_chart.png')  # It removes generated PNG file. Uncomment if needed
-# os.remove('bar_chart.svg')  # It removes generate SVG file. Uncomment if needed
+pdf.image(img_bytes, x=x, y=y, w=w, h=h)
+pdf.output('bar_chart_pdf.pdf')
 ```
-The above example takes around 40 seconds to render the image. User who are using `reportlab` and `svglib` to work with `svg` images and are intended to render `svg` images `reportlab` and `svglib` can use this library. However, it does not garranty for a lesser time to accomplish the process.
-
-Also the above process is not an `in-memory` process as we are required to create both `png` and `svg` to embed into the `fpdf`. 
+User who are using `reportlab` and `svglib` to work with `svg` images and are intended to render `svg` images `reportlab` and `svglib` can use this library. However, it consumes a little bit more time than the previous example.
 
 The above code shows following output -
 ![](pygal_chart.png)
