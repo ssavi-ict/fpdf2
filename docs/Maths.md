@@ -229,7 +229,7 @@ Result:
 ## Using Pygal ##
 [Pygal](https://www.pygal.org/en/stable/) is a graph plotting library using Python. You can install Pygal using `pip install pygal` command.  
 
-`fpdf2` is able to embed the graph and charts that are generated using `Pygal` library. The following ways explain how to embed `Pygal` charts into `fpdf2` library. However, we can not embed graphs as SVG directly. Since, `Pygal` introduces <style> & <script> elements to the `SVG` images it produces ([Ref](https://github.com/Kozea/pygal/blob/3.0.0/pygal/svg.py#L449)) which currently not supported by `fpdf`. You can see the unsupported SVG features of `fpdf`[here](https://pyfpdf.github.io/fpdf2/SVG.html#currently-unsupported-notable-svg-features).
+`fpdf2` is able to embed the graph and charts that are generated using `Pygal` library. The following ways explain how to embed `Pygal` charts into `fpdf2` library. However, we can not embed graphs as SVG directly. Since, `Pygal` introduces `<style>` & `<script>` elements to the `SVG` images it produces ([Ref](https://github.com/Kozea/pygal/blob/3.0.0/pygal/svg.py#L449)) which is currently not supported by `fpdf2`. The full list of unsupported SVG features of `fpdf2` is [there](https://pyfpdf.github.io/fpdf2/SVG.html#currently-unsupported-notable-svg-features).
 
 ### Using cairosvg (*A faster and efficient implementation*) ### 
 
@@ -301,8 +301,7 @@ bar_chart.add('Product B', [750, 1000, 1250, 1500, 1750])
 
 # Render the chart and convert it to a bytestring object
 svg_img = bar_chart.render()
-xml_parser = etree.XMLParser()
-svg_root = etree.fromstring(svg_img, parser=xml_parser)
+svg_root = etree.fromstring(svg_img)
 drawing = SvgRenderer(svg_img).render(svg_root)
 drawing_img_byte = renderPM.drawToString(drawing)
 img_bytes = io.BytesIO(drawing_img_byte)
