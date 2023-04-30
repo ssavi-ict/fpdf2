@@ -1,11 +1,5 @@
 "HTML renderer"
 
-__author__ = "Mariano Reingart <reingart@gmail.com>"
-__copyright__ = "Copyright (C) 2010 Mariano Reingart"
-__license__ = "LGPL 3.0"
-
-# Inspired by tuto5.py and several examples from fpdf.org, html2fpdf, etc.
-
 import logging, warnings
 from html.parser import HTMLParser
 
@@ -212,6 +206,7 @@ class HTML2FPDF(HTMLParser):
         table_line_separators=False,
         ul_bullet_char=BULLET_WIN1252,
         heading_sizes=None,
+        pre_code_font="courier",
         warn_on_tags_not_matching=True,
         **_,
     ):
@@ -250,6 +245,7 @@ class HTML2FPDF(HTMLParser):
         self.heading_below = 0.2  # extra space below heading, relative to font size
         if heading_sizes:
             self.heading_sizes.update(heading_sizes)
+        self.pre_code_font = pre_code_font
         self.warn_on_tags_not_matching = warn_on_tags_not_matching
         self._tags_stack = []
         # <table>-related properties:
@@ -381,10 +377,10 @@ class HTML2FPDF(HTMLParser):
             self.pdf.add_page(same=True)
         if tag == "code":
             self.font_stack.append((self.font_face, self.font_size, self.font_color))
-            self.set_font("courier", 11)
+            self.set_font(self.pre_code_font, 11)
         if tag == "pre":
             self.font_stack.append((self.font_face, self.font_size, self.font_color))
-            self.set_font("courier", 11)
+            self.set_font(self.pre_code_font, 11)
             self.pre_formatted = True
         if tag == "blockquote":
             self.pdf.set_text_color(100, 0, 45)
@@ -440,8 +436,10 @@ class HTML2FPDF(HTMLParser):
                     if self.table_line_separators
                     else "SINGLE_TOP_LINE"
                 )
+            align = attrs.get("align", "center").upper()
             self.table = Table(
                 self.pdf,
+                align=align,
                 borders_layout=borders_layout,
                 line_height=self.h * 1.30,
                 width=width,
